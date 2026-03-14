@@ -1,0 +1,6 @@
+[submodule "plairoom-ios"]
+	path = plairoom-ios
+	url = git@github.com:Twada9/plairoom-ios.git
+[submodule "plairoom-android"]
+	path = plairoom-android
+	url = git@github.com:Twada9/plairoom-android.git

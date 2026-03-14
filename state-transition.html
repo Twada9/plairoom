@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>状態遷移図 — AI Content SNS</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2e2e2e;
+      --accent: #00e5ff;
+      --accent2: #ff6b35;
+      --accent3: #a855f7;
+      --text: #e0e0e0;
+      --muted: #666;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      padding: 40px;
+    }
+
+    h1 {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+      margin-bottom: 48px;
+    }
+
+    .section {
+      margin-bottom: 56px;
+    }
+
+    .section-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--accent2);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .desc {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: 'IBM Plex Mono', monospace;
+      margin-bottom: 12px;
+    }
+
+    .diagram-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px 24px;
+      overflow-x: auto;
+    }
+
+    .diagram-box .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: #8080d0;
+      margin-bottom: 12px;
+    }
+
+    .info-box {
+      margin-top: 14px;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 18px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+    }
+
+    .info-box h4 {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 5px;
+      color: var(--muted);
+    }
+
+    .info-row code {
+      min-width: 220px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>STATE TRANSITION DIAGRAM</h1>
+<p class="subtitle">AI Content SNS — 状態遷移図 / FSM Specification · 2026-03-14</p>
+
+<!-- ───────────────────────────── 01 App Launch ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">01 — アプリ起動</div>
+  <div class="desc">// App 起動時の認証状態チェックフロー（AppFeature / Application）</div>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> Launching
+    Launching --> AuthChecking
+    AuthChecking --> LoggedIn    : 認証済み
+    AuthChecking --> LoggedOut   : 未ログイン
+    AuthChecking --> AuthRetrying : ロード失敗
+    AuthRetrying --> AuthChecking : リトライ（1・2回目）
+    AuthRetrying --> LoggedOut   : 3回失敗（未ログイン扱い）
+    LoggedIn  --> [*] : ホーム画面へ
+    LoggedOut --> [*] : ログインモーダル表示
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 02 Global Auth ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">02 — 全体：認証状態（Global Auth）</div>
+  <div class="desc">// アプリ全体で保持するセッション状態</div>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> Unauthenticated
+    Unauthenticated --> Authenticated   : ログイン成功
+    Authenticated   --> Unauthenticated : ログアウト
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 03 Global Generation ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">03 — 全体：コンテンツ生成状態（Global Generation）</div>
+  <div class="desc">// Authenticated と並行して保持。Supabase Realtime で status 変化を監視</div>
+  <span class="tag">⚑ PARALLEL STATE — Authenticated と同時に保持</span>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> notGenerating
+    notGenerating --> generating    : 生成リクエスト送信成功
+    generating --> notGenerating    : 生成完了（Realtime 通知）
+    generating --> notGenerating    : 生成失敗（Realtime or タイムアウト）
+    </div>
+  </div>
+  <div class="info-box" style="border-color:#1a2a1a;">
+    <h4 style="color:#4ade80;">// 実装メモ — Supabase Realtime</h4>
+    <div class="info-row">
+      <code style="color:#4ade80; min-width:260px;">監視テーブル</code>
+      <span>image_contents / music_contents</span>
+    </div>
+    <div class="info-row">
+      <code style="color:#4ade80; min-width:260px;">フィルタ</code>
+      <span>user_id = eq.{currentUserId} AND status = eq.completed</span>
+    </div>
+    <div class="info-row">
+      <code style="color:#4ade80; min-width:260px;">イベント</code>
+      <span>UPDATE — status が generating → completed に変化したタイミング</span>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 04 Room List ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">04 — ルームリスト</div>
+  <div class="desc">// RoomListFeature (iOS · TCA) · RoomListViewModel (Android · MVVM)</div>
+  <span class="tag">⚑ Global Generation（03）と並行して動作</span>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> loading
+    loading --> idle       : ロード完了
+    loading --> loadFailed : ロード失敗
+    loadFailed --> loading : リトライ
+    loadFailed --> error   : リトライ失敗
+    error --> loading : 再試行（ロード）を選択
+    error --> idle    : キャンセルを選択
+    idle --> requesting : ユーザーアクション
+    requesting --> idle : 通信成功
+    requesting --> idle : 通信失敗 [AppError]
+    idle --> requesting : 手動リトライ
+    </div>
+  </div>
+  <div class="info-box">
+    <h4 style="color:var(--accent3);">// AppError — エラー種別定義</h4>
+    <div class="info-row">
+      <code style="color:var(--accent);">networkError</code>
+      <span>ネットワーク障害 / タイムアウト</span>
+    </div>
+    <div class="info-row">
+      <code style="color:var(--accent);">usageLimitExceeded</code>
+      <span>無料プランの生成回数上限超過（サーバー側で判定・返却）</span>
+    </div>
+    <div class="info-row">
+      <code style="color:var(--accent);">serverError(code: Int)</code>
+      <span>サーバーエラー（5xx 系）</span>
+    </div>
+    <div class="info-row">
+      <code style="color:var(--accent);">unauthorized</code>
+      <span>認証切れ → ログインモーダルへ誘導</span>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 05 Room Detail ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">05 — ルーム詳細</div>
+  <div class="desc">// RoomDetailFeature (iOS · TCA) · RoomDetailViewModel (Android · MVVM)</div>
+  <span class="tag">⚑ Global Generation（03）と並行して動作</span>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> loading
+    loading --> idle       : ロード完了
+    loading --> loadFailed : ロード失敗
+    loadFailed --> loading : リトライ
+    loadFailed --> error   : リトライ失敗
+    error --> loading : 再試行（ロード）を選択
+    error --> idle    : キャンセルを選択
+    idle --> requesting : ユーザーアクション
+    requesting --> idle : 通信成功
+    requesting --> idle : 通信失敗 [AppError]
+    idle --> requesting : 手動リトライ
+    idle --> loginModal : 未ログインユーザーが生成ボタンをタップ
+    loginModal --> idle  : ログイン成功 / キャンセル
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 06 AI Generate ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">06 — AI生成画面</div>
+  <div class="desc">// GenerateFeature (iOS · TCA) · GenerateViewModel (Android · MVVM)</div>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> idle
+    idle --> requesting : 送信ボタンタップ（Edge Function 呼び出し）
+    requesting --> idle : 通信失敗 [AppError]
+    requesting --> [*]  : 通信成功 → ルーム詳細へ戻る
+    </div>
+  </div>
+  <div class="info-box" style="border-color:#2a1a0a;">
+    <h4 style="color:var(--accent2);">// 通信成功後の副作用</h4>
+    <div class="info-row">
+      <code style="color:var(--accent2);">image_contents.status</code>
+      <span>= "generating" で DB レコード作成済み（Edge Function が更新）</span>
+    </div>
+    <div class="info-row">
+      <code style="color:var(--accent2);">Global Generation</code>
+      <span>notGenerating → generating に遷移</span>
+    </div>
+    <div class="info-row">
+      <code style="color:var(--accent2);">usageLimitExceeded</code>
+      <span>AppError として返却 → idle に戻りエラー表示</span>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 07 Result Screen ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">07 — 生成結果画面</div>
+  <div class="desc">// ResultFeature (iOS · TCA) · ResultViewModel (Android · MVVM)</div>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> idle
+    idle --> requesting   : 投稿ボタンタップ
+    requesting --> idle   : 通信失敗 [AppError]
+    requesting --> [*]    : 通信成功 → ルーム詳細へ
+    idle --> [*]          : キャンセル（戻るボタン）→ ルーム詳細へ
+    idle --> [*]          : やり直す → AI生成画面へ
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 08 Login Modal ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">08 — ログイン / 新規登録モーダル</div>
+  <div class="desc">// AuthFeature (iOS · TCA) · AuthViewModel (Android · MVVM)</div>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> loginIdle
+    loginIdle --> signUpIdle  : 新規登録タブ切り替え
+    signUpIdle --> loginIdle  : ログインタブ切り替え
+    loginIdle  --> requesting : ログインボタンタップ
+    signUpIdle --> requesting : 登録ボタンタップ
+    requesting --> loginIdle  : 通信失敗 [AppError]
+    requesting --> [*]        : 通信成功 → モーダルを閉じる
+    loginIdle  --> [*]        : キャンセル
+    signUpIdle --> [*]        : キャンセル
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────── 09 Settings ───────────────────────────── -->
+<div class="section">
+  <div class="section-label">09 — 設定画面</div>
+  <div class="desc">// SettingsFeature (iOS · TCA) · SettingsViewModel (Android · MVVM)</div>
+  <div class="diagram-box">
+    <div class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> idle
+    idle --> [*] : ログアウト → Global Auth が Unauthenticated へ遷移
+    </div>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1e2235',
+      primaryTextColor: '#e0e0e0',
+      primaryBorderColor: '#00e5ff',
+      lineColor: '#555',
+      secondaryColor: '#16213e',
+      background: '#1a1a1a',
+      mainBkg: '#222',
+      nodeBorder: '#00e5ff',
+      clusterBkg: '#1a1a2e',
+      titleColor: '#e0e0e0',
+      edgeLabelBackground: '#161616',
+      stateBkg: '#222',
+      stateLabelColor: '#e0e0e0',
+      transitionColor: '#00e5ff',
+      fontFamily: '"IBM Plex Mono", monospace',
+    }
+  });
+</script>
+
+</body>
+</html>
