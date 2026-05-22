@@ -283,50 +283,46 @@ Authorization: Bearer {JWT_TOKEN}
 
 ---
 
-### 4-3. 投稿確定（pending → completed）
+### 4-3. 投稿確定 / やり直し（pending → completed / failed）
 
-> 生成結果画面で「投稿する」をタップしたとき
+> 生成結果画面で「投稿する」「やり直す」をタップしたとき。
+> `image_contents` / `music_contents` は RLS で UPDATE が許可されていないため、
+> service_role を持つ Edge Function 経由で status を更新する。
 
 ```
-PATCH /rest/v1/image_contents?id=eq.{content_id}
+POST /functions/v1/patch-content-status
 Authorization: Bearer {JWT_TOKEN}
 Content-Type: application/json
-Prefer: return=representation
 ```
 
 **Request Body**
 ```json
 {
+  "content_id": "uuid",
+  "content_type": "image",
   "status": "completed"
 }
 ```
 
-**Response `200`** — 更新後のレコード
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `content_id` | uuid | 対象コンテンツの ID |
+| `content_type` | string | `image` / `music` |
+| `status` | string | `completed`（投稿確定）/ `failed`（やり直し） |
 
----
-
-### 4-4. やり直し（pending → failed）
-
-> 生成結果画面で「やり直す」をタップしたとき
-
-```
-PATCH /rest/v1/image_contents?id=eq.{content_id}
-Authorization: Bearer {JWT_TOKEN}
-Content-Type: application/json
-```
-
-**Request Body**
-```json
-{
-  "status": "failed"
-}
-```
+**遷移ルール**
+- 対象レコードの `user_id` が呼び出し元と一致しない場合は `403`
+- 対象レコードが存在しない場合は `404`
+- 対象レコードの現在 status が `pending` 以外の場合は `409`
 
 **Response `200`**
+```json
+{ "success": true }
+```
 
 ---
 
-### 4-5. music_contents 固有フィールド
+### 4-4. music_contents 固有フィールド
 
 `music_contents` は上記に加えて `duration`（秒数・integer）が含まれる。
 

@@ -824,5 +824,137 @@
   </div>
 </div>
 
+<!-- SECTION 5: Settings Screen States -->
+<div class="flow-section">
+  <div class="section-label">05 — 設定画面（認証状態別）</div>
+  <div class="screens-row" style="align-items:flex-start; gap:0;">
+
+    <!-- ゲスト状態 -->
+    <div class="screen-wrapper">
+      <div class="screen">
+        <div class="screen-notch"></div>
+        <div class="screen-header"><span>9:41</span><span>●●●</span></div>
+        <div style="padding: 6px 8px 4px;"><span style="font-size:10px; font-weight:700;">設定</span></div>
+        <div class="screen-body" style="height: calc(var(--screen-h) - 80px);">
+
+          <!-- ゲストCTAセクション -->
+          <div style="background:#1a1a2e; border:1px solid #2a2a4e; border-radius:6px; padding:8px; margin-bottom:6px; text-align:center;">
+            <div style="font-size:22px; margin-bottom:4px; color:#444;">○</div>
+            <div style="font-size:8px; font-weight:700; color:var(--text); margin-bottom:2px;">ゲストとして利用中</div>
+            <div style="font-size:6px; color:#666; margin-bottom:7px; line-height:1.5;">投稿・AI生成には<br>ログインが必要です</div>
+            <div class="ui-btn primary" style="margin-bottom:0; font-size:7px;">ログイン / 新規登録</div>
+          </div>
+
+          <div class="ui-divider"></div>
+
+          <!-- リンクセクション -->
+          <div class="ui-setting-row" style="color:var(--text-muted);">プライバシーポリシー <span class="chevron">›</span></div>
+          <div class="ui-setting-row" style="color:var(--text-muted);">利用規約 <span class="chevron">›</span></div>
+        </div>
+        <div class="screen-tabbar">
+          <span>🏠 ルーム</span>
+          <span class="active">⚙️ 設定</span>
+        </div>
+      </div>
+      <div class="screen-name">設定（ゲスト）</div>
+    </div>
+
+    <!-- 矢印: ログインボタンタップ → モーダル -->
+    <div class="arrow-wrapper">
+      <div class="arrow arrow-modal">
+        <div class="arrow-line" style="width:40px;"></div>
+        <div class="arrow-label">ログインボタン</div>
+      </div>
+    </div>
+
+    <!-- Auth モーダル（設定画面から） -->
+    <div class="screen-wrapper">
+      <div class="screen" style="position:relative;">
+        <div class="screen-notch"></div>
+        <div class="screen-header"><span>9:41</span><span>●●●</span></div>
+        <div class="screen-body" style="opacity:0.25; height: calc(var(--screen-h) - 60px);">
+          <div style="background:#1a1a2e; border:1px solid #2a2a4e; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:7px; color:#555;">ゲストとして利用中</div>
+          </div>
+        </div>
+        <div class="ui-modal-overlay">
+          <div class="ui-modal-sheet">
+            <div class="ui-modal-handle"></div>
+            <div class="ui-modal-title">ログイン / 新規登録</div>
+            <div class="ui-tab-switch">
+              <span class="active">ログイン</span>
+              <span>新規登録</span>
+            </div>
+            <div class="ui-input">メールアドレス</div>
+            <div class="ui-input">パスワード</div>
+            <div class="ui-btn primary">ログイン</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-name">Auth モーダル（共通）</div>
+    </div>
+
+    <!-- 矢印: 認証成功 -->
+    <div class="arrow-wrapper">
+      <div class="arrow arrow-push">
+        <div class="arrow-line" style="width:40px;"></div>
+        <div class="arrow-label">認証成功</div>
+      </div>
+    </div>
+
+    <!-- ログイン済み状態 -->
+    <div class="screen-wrapper">
+      <div class="screen">
+        <div class="screen-notch"></div>
+        <div class="screen-header"><span>9:41</span><span>●●●</span></div>
+        <div style="padding: 6px 8px 4px;"><span style="font-size:10px; font-weight:700;">設定</span></div>
+        <div class="screen-body" style="height: calc(var(--screen-h) - 80px);">
+
+          <!-- アカウントセクション -->
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#1a3a4a;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;">👤</div>
+            <div>
+              <div style="font-size:8px;font-weight:700;">ユーザー名</div>
+              <div style="font-size:6.5px;color:#555;">user@example.com</div>
+            </div>
+          </div>
+
+          <div class="ui-divider"></div>
+
+          <!-- プランセクション -->
+          <div class="ui-setting-row">プラン：無料プラン <span style="font-size:6px;color:var(--accent2);">→ アップグレード</span></div>
+
+          <div class="ui-divider"></div>
+
+          <!-- リンクセクション -->
+          <div class="ui-setting-row" style="color:var(--text-muted);">プライバシーポリシー <span class="chevron">›</span></div>
+          <div class="ui-setting-row" style="color:var(--text-muted);">利用規約 <span class="chevron">›</span></div>
+
+          <div class="ui-divider"></div>
+
+          <!-- ログアウト -->
+          <div class="ui-setting-row" style="color:var(--accent2); justify-content:center;">ログアウト</div>
+        </div>
+        <div class="screen-tabbar">
+          <span>🏠 ルーム</span>
+          <span class="active">⚙️ 設定</span>
+        </div>
+      </div>
+      <div class="screen-name">設定（ログイン済み）</div>
+    </div>
+
+    <!-- 差分メモ -->
+    <div style="display:flex; flex-direction:column; justify-content:center; padding: calc(var(--screen-h)/2 - 80px) 0 0 24px; font-family:'IBM Plex Mono',monospace; font-size:8px; color:var(--text-muted); line-height:2.2; flex-shrink:0;">
+      <div style="color:var(--accent2); font-size:9px; margin-bottom:8px; letter-spacing:2px;">DIFF</div>
+      <div><span style="color:#4ade80;">＋</span> アカウント情報</div>
+      <div><span style="color:#4ade80;">＋</span> プランセクション</div>
+      <div><span style="color:#4ade80;">＋</span> ログアウトボタン</div>
+      <div><span style="color:var(--accent2);">－</span> ゲストCTA</div>
+      <div style="margin-top:8px; color:#444; font-size:7px;">リンクは共通表示</div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>

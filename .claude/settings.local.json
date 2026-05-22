@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild -scheme PLAIROOM-iOS -destination 'platform=iOS Simulator,name=iPhone 16' build)",
+      "Bash(xcrun simctl list devices available)",
+      "Bash(xcodebuild -scheme PLAIROOM-iOS -destination 'platform=iOS Simulator,name=iPhone 13 Pro' build)",
+      "Bash(xcodebuild -scheme PLAIROOM-iOS -destination 'platform=iOS Simulator,name=iPhone 17' build)",
+      "Bash(swift build)",
+      "Bash(xcodebuild -project PLAIROOM-iOS.xcodeproj -scheme PLAIROOM-iOS -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 17' build)",
+      "Bash(gh pr *)",
+      "Bash(gh repo *)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
