@@ -50,6 +50,7 @@
 |---|---|---|
 | `usageLimitExceeded` | 429 | 無料プランの生成回数上限超過 |
 | `unauthorized` | 401 | 未ログイン / JWT 期限切れ |
+| `invalidCredentials` | 401 | 再認証失敗（退会時のパスワード不一致など） |
 | `serverError` | 500 | AI サービスまたはサーバー内部エラー |
 | `networkError` | 503 | AI サービスへの接続失敗 |
 
@@ -593,6 +594,65 @@ ai_usage_logs WHERE user_id = {jwt_user_id}
 
 ---
 
+### 7-4. delete-account
+
+> 設定画面の退会フローから呼び出す。アカウントと関連データを完全に削除する。
+
+```
+POST /functions/v1/delete-account
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+```
+
+**Request Body**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+> 本人確認のため、ログイン中ユーザーのメールアドレスとパスワードを再送する。
+
+**処理フロー**
+
+```
+① JWT を検証し user を特定
+  └─ 未ログイン / 失効 → 401 unauthorized
+
+② リクエストの email が JWT の user.email と一致するか確認
+  └─ 不一致 → 401 invalidCredentials
+
+③ email + password で再認証（signInWithPassword）
+  └─ 失敗 → 401 invalidCredentials
+
+④ Storage の images バケットから {user_id}/ 配下のファイルを一覧取得し一括削除
+   └─ images/{user_id}/{content_id}.jpg
+
+⑤ auth.admin.deleteUser(user_id) を実行（service_role）
+   └─ profiles を起点に image_contents / music_contents /
+      likes / comments / ai_usage_logs が ON DELETE CASCADE で連鎖削除
+
+⑥ success を返す（クライアントはローカルセッションを破棄）
+```
+
+**Response `200`**
+```json
+{
+  "success": true
+}
+```
+
+**Error Responses**
+
+| status | type | 説明 |
+|---|---|---|
+| `401` | `unauthorized` | 未ログイン / JWT 期限切れ |
+| `401` | `invalidCredentials` | メール不一致 / パスワード再認証失敗 |
+| `500` | `serverError` | Storage 削除またはユーザー削除に失敗 |
+
+---
+
 ## 8. Realtime 購読
 
 > Edge Function からの DB 更新を受け取りクライアントの状態を遷移させる
@@ -630,3 +690,9 @@ filter:  id=eq.{content_id}
 ```
 https://{PROJECT_REF}.supabase.co/storage/v1/object/public/{bucket}/{path}
 ```
+
+> **実装上の注記**：現行のデプロイ済み実装では画像の保存パスはユーザー ID 起点の
+> `images/{user_id}/{content_id}.jpg`（バケットは `images` のみ・public）。退会
+> （7-4 delete-account）ではこの `{user_id}/` プレフィックス配下を削除対象とする。
+> `music` バケットは未作成のため、音楽 Storage を追加した際は同様に `{user_id}/`
+> 配下を退会時の削除対象に加える。

@@ -29,6 +29,7 @@ storage/
 | generate-image | 画像生成AIを呼び出し、結果をStorageに保存 |
 | generate-music | 音楽生成AIを呼び出し、結果をStorageに保存 |
 | check-usage-limit | 無料ユーザーの生成回数を確認 |
+| delete-account | 退会処理。パスワード再認証後、Storageファイルを削除し auth.users を削除（DBは CASCADE で連鎖削除） |
 
 ### AI サービス
 
@@ -122,6 +123,17 @@ app/
     └── AppModule.kt
 ```
 
+### 退会フロー（Settings）
+
+```
+SettingsScreen（退会ボタン）
+  → 退会確認 UI（削除内容の警告 + パスワード入力ダイアログ）
+  → SettingsViewModel.deleteAccount(password)
+  → AuthRepository.deleteAccount(email, password)
+      → delete-account Edge Function を呼び出し
+  → 成功時：ローカルセッションを破棄しログイン前状態へ遷移
+```
+
 ---
 
 ## iOS
@@ -191,6 +203,17 @@ App/
 │   └── Comment.swift
 └── DI/
     └── Dependencies.swift
+```
+
+### 退会フロー（Settings）
+
+```
+SettingsView（退会ボタン）
+  → 退会確認 UI（削除内容の警告 + パスワード入力アラート）
+  → SettingsFeature: Action.deleteAccountTapped / .reauthSubmitted(password)
+  → AuthRepository.deleteAccount(email, password)
+      → delete-account Edge Function を呼び出し
+  → 成功時：ローカルセッションを破棄しログイン前状態へ遷移
 ```
 
 ---
